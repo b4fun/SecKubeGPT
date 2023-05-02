@@ -12,15 +12,68 @@ st.title('Pod Security Standard with GPT')
 if 'analyzing' not in st.session_state:
     st.session_state.analyzing = False
 
-if 'error' not in st.session_state:
-    st.session_state.error = ''
-
-if st.session_state.error:
-    st.error(st.session_state.error)
+if 'openai_model' not in st.session_state:
+    st.session_state.openai_model = 'gpt-3.5-turbo'
 
 
-def set_error(error: str) -> None:
-    st.session_state.error = error
+def ask_openai(spec: str):
+    if 'OPENAI_TOKEN' not in st.secrets:
+        st.error('OPENAI_TOKEN secret is not set')
+        return
+
+    model = st.session_state.openai_model
+
+    import openai
+    openai.api_key = st.secrets.OPENAI_TOKEN
+
+    prompt = '\n'.join([
+        'Please detect potential security issues in the following Kubernetes spec.',
+        'Please output the result as a JSON file. Your output should be a valid JSON.'
+        'Don\'t explain your output.'
+        'Your JSON output should be a list of object. Each object should have 3 fields, "Rule", "Message", and "Location".'
+        'The "Location" field describes the source code location, while the "Message" field describes the security issue.'
+        'If there is no security issue, please output empty JSON.'
+        'If the input is invalid, return an empty JSON.',
+        '',
+        '',
+        'input:',
+        '```',
+        f'{spec}',
+        '```',
+        'output:',
+    ])
+
+    print('=' * 80)
+    print('prompt:')
+    print(prompt)
+    print('=' * 80)
+
+    print('running...')
+
+    response = openai.ChatCompletion.create(
+        model=model,
+        messages=[
+            {
+                'role': 'system',
+                'content': ('You are a helpful assistant that helps developers '
+                            'detect potential security issues in their Kubernetes '
+                            'YAML files using pod security standard.'),
+            },
+            {
+                'role': 'user',
+                'content': prompt,
+            },
+        ],
+        temperature=0.0,
+    )
+    response_content = response['choices'][0]['message']['content']
+    print('=' * 80)
+    print('response:')
+    print(response_content)
+    print('=' * 80)
+
+    st.session_state.result = response_content
+
 
 
 def do_analyze():
@@ -28,13 +81,14 @@ def do_analyze():
         # already running...
         return
     st.session_state.analyzing = True
-    set_error('')
 
     try:
         spec_content = normalize_text(st.session_state.spec)
         if not spec_content:
-            set_error('spec is empty')
+            st.error('spec is empty')
             return
+
+        ask_openai(spec_content)
     finally:
         st.session_state.analyzing = False
 
