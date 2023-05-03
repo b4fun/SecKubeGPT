@@ -1,5 +1,6 @@
-import typing as t
+import json
 import streamlit as st
+import typing as t
 
 def normalize_text(s: t.Optional[str]) -> str:
     if not s:
@@ -11,6 +12,9 @@ st.title('Pod Security Standard with GPT')
 
 if 'analyzing' not in st.session_state:
     st.session_state.analyzing = False
+
+if 'result' not in st.session_state:
+    st.session_state.result = ''
 
 if 'openai_model' not in st.session_state:
     st.session_state.openai_model = 'gpt-3.5-turbo'
@@ -72,7 +76,29 @@ def ask_openai(spec: str):
     print(response_content)
     print('=' * 80)
 
-    st.session_state.result = response_content
+    try:
+        issue_dicts = json.loads(response_content)
+        if len(issue_dicts) < 1:
+            st.session_state.result = '😊 no security issue detected!'
+            return
+
+        result_table = '| Rule | Message | Location |\n|--|--|--|\n'
+        for issue_dict in issue_dicts:
+            rule_name = issue_dict.get('Rule')
+            message = issue_dict.get('Message')
+            location = json.dumps(issue_dict.get('Location'))
+            result_table += f'| {rule_name} | {message} | {location} |\n'
+        st.session_state.result = result_table
+
+    except Exception as e:
+        print('=' * 80)
+        print('decode error:', e)
+        print('=' * 80)
+
+        # dump the full response for now
+        st.session_state.result = f"Response from OpenAI:\n\n```\n{response_content}\n```"
+        st.error('invalid JSON response returned from OpenAI...')
+        return
 
 
 
@@ -105,8 +131,5 @@ with left_column:
 
 
 with right_column:
-    st.text_area(
-        'Result',
-        key='result',
-        disabled=True,
-    )
+    if s := normalize_text(st.session_state.result):
+        st.markdown(s)
