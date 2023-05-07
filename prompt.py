@@ -7,7 +7,7 @@ from utils import log_data
 
 # TODO: convert table to example output
 def get_pss_prompt_with_table(spec: str) -> str:
-    return f'''
+    return f"""
 Please detect potential security issues with Kubernetes pod security standard definition in below:
 
 ```
@@ -323,11 +323,11 @@ input:
 ```
 {spec}
 ```
-output:'''
+output:"""
 
 
 def get_pss_prompt_without_table(spec: str) -> str:
-    return f'''
+    return f"""
 Please detect potential security issues with Kubernetes pod security standard.
 Please output the result as a JSON file. Your output should be a valid JSON.
 Don't explain your output.
@@ -409,28 +409,30 @@ input:
 ```
 {spec}
 ```
-output:'''
+output:"""
 
 
 def get_pss_openai_messages(spec: str) -> t.List[t.Dict[str, str]]:
     return [
         {
-            'role': 'system',
-            'content': ('You are a helpful assistant that helps developers '
-                        'detect potential security issues in their Kubernetes '
-                        'YAML files using pod security standard.'),
+            "role": "system",
+            "content": (
+                "You are a helpful assistant that helps developers "
+                "detect potential security issues in their Kubernetes "
+                "YAML files using pod security standard."
+            ),
         },
         {
-            'role': 'user',
-            'content': get_pss_prompt_without_table(spec),
+            "role": "user",
+            "content": get_pss_prompt_without_table(spec),
         },
     ]
 
 
 def get_pss_results_from_openai(api_key: str, model: str, spec: str) -> str:
     messages = get_pss_openai_messages(spec)
-    print('here!!')
-    log_data('openai prompt', messages[1]['content'])
+    print("here!!")
+    log_data("openai prompt", messages[1]["content"])
 
     response = openai.ChatCompletion.create(
         api_key=api_key,
@@ -439,25 +441,27 @@ def get_pss_results_from_openai(api_key: str, model: str, spec: str) -> str:
         temperature=0.0,
     )
 
-    response_content = response['choices'][0]['message']['content']
-    log_data('openai response', response_content)
+    response_content = response["choices"][0]["message"]["content"]
+    log_data("openai response", response_content)
 
     try:
         issue_dicts = json.loads(response_content)
         if len(issue_dicts) < 1:
-            return '😊 no security issue detected!'
+            return "😊 no security issue detected!"
 
-        result_table = '| Rule | Message | Location |\n|--|--|--|\n'
+        result_table = "| Rule | Message | Location |\n|--|--|--|\n"
         for issue_dict in issue_dicts:
-            rule_name = issue_dict.get('Rule')
-            message = issue_dict.get('Message')
-            location = json.dumps(issue_dict.get('Location'))
-            result_table += f'| {rule_name} | {message} | {location} |\n'
+            rule_name = issue_dict.get("Rule")
+            message = issue_dict.get("Message")
+            location = json.dumps(issue_dict.get("Location"))
+            result_table += f"| {rule_name} | {message} | {location} |\n"
         return result_table
 
     except Exception as e:
-        log_data('openai response decode error', e)
+        log_data("openai response decode error", e)
 
         # return the full response for now
-        err_details = f'failed to parse OpenAI response from JSON\n\n```\n{response_content}\n```'
+        err_details = (
+            f"failed to parse OpenAI response from JSON\n\n```\n{response_content}\n```"
+        )
         raise Exception(err_details)

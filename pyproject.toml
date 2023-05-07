@@ -1,0 +1,19 @@
+[tool.poetry]
+name = "seckubegpt"
+version = "0.0.1"
+description = ""
+authors = ["hbc <me@hbc.rocks>"]
+license = "MIT"
+readme = "README.md"
+
+[tool.poetry.dependencies]
+python = "^3.10"
+streamlit = "^1.22.0"
+openai = "^0.27.6"
+
+[tool.poetry.group.dev.dependencies]
+black = "^23.3.0"
+
+[build-system]
+requires = ["poetry-core"]
+build-backend = "poetry.core.masonry.api"
