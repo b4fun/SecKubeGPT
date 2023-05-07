@@ -76,7 +76,12 @@ def ui_input_source():
     st.write('### 1. Provide some Kubernetes spec')
     tab_text_area, tab_file_upload = st.tabs(['From String', 'From Files'])
     with tab_text_area:
-        st.text_area('Spec', key='spec', height=400)
+        st.text_area(
+            'Spec',
+            key='spec',
+            height=400,
+            help='If files upload is used, this will be ignored',
+        )
     with tab_file_upload:
         st.file_uploader(
             'Upload your Kubernetes spec files',
