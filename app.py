@@ -73,7 +73,7 @@ def ui_title():
 
 
 def ui_input_source():
-    st.write('### 1. Provide some Kubernetes spec')
+    st.write('### 1. Provide some Kubernetes specs')
     tab_text_area, tab_file_upload = st.tabs(['From String', 'From Files'])
     with tab_text_area:
         st.text_area(
