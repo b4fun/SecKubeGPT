@@ -1,7 +1,7 @@
 import streamlit as st
 import typing as t
 from prompt import get_pss_results_from_openai
-from utils import normalize_text
+from utils import normalize_text, read_as_plain_text
 
 
 def initialize_state():
@@ -20,17 +20,29 @@ def ask_openai(spec: str):
         st.error('OPENAI_TOKEN secret is not set')
         return
 
-    model = st.session_state.openai_model
-
     try:
         st.session_state.result = get_pss_results_from_openai(
             st.secrets.OPENAI_TOKEN,
-            model,
+            st.session_state.openai_model,
             spec,
         )
     except Exception as e:
         st.session_state.result = f'{e}'
         st.error('error running OpenAI API')
+
+
+def get_analyze_content() -> t.Optional[str]:
+    if len(st.session_state.spec_files) == 0:
+        return normalize_text(st.session_state.spec)
+
+    for f in st.session_state.spec_files:
+        print(dir(f))
+
+    return '---\n'.join(
+        s
+        for f in st.session_state.spec_files
+        if (s := normalize_text(read_as_plain_text(f)))
+    )
 
 
 def can_submit_analyze() -> bool:
@@ -40,29 +52,18 @@ def can_submit_analyze() -> bool:
     return True
 
 
-def can_analyze() -> bool:
-    if st.session_state.analyzing:
-        return False
-
-    has_valid_spec = normalize_text(st.session_state.spec)
-    if not has_valid_spec:
-        return False
-
-    return True
-
-
 def do_analyze():
-    if not can_analyze():
+    if not can_submit_analyze():
         return
+
+    analyze_content = get_analyze_content()
+    if not analyze_content:
+        return
+
     st.session_state.analyzing = True
 
     try:
-        spec_content = normalize_text(st.session_state.spec)
-        if not spec_content:
-            st.error('spec is empty')
-            return
-
-        ask_openai(spec_content)
+        ask_openai(analyze_content)
     finally:
         st.session_state.analyzing = False
 
@@ -77,7 +78,12 @@ def ui_input_source():
     with tab_text_area:
         st.text_area('Spec', key='spec', height=400)
     with tab_file_upload:
-        st.write('TODO')
+        st.file_uploader(
+            'Upload your Kubernetes spec files',
+            type=['yaml', 'yml', 'json'],
+            key='spec_files',
+            accept_multiple_files=True,
+        )
 
 
 def ui_analyze_settings():

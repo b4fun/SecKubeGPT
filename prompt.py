@@ -6,7 +6,7 @@ from utils import log_data
 
 
 # TODO: convert table to example output
-def get_pss_prompt(spec: str) -> str:
+def get_pss_prompt_with_table(spec: str) -> str:
     return f'''
 Please detect potential security issues with Kubernetes pod security standard definition in below:
 
@@ -326,6 +326,92 @@ input:
 output:'''
 
 
+def get_pss_prompt_without_table(spec: str) -> str:
+    return f'''
+Please detect potential security issues with Kubernetes pod security standard.
+Please output the result as a JSON file. Your output should be a valid JSON.
+Don't explain your output.
+Your JSON output should be a list of object. Each object should have 3 fields, "Rule", "Message", and "Location".
+The "Location" field describes the source code location, while the "Message" field describes the security issue.
+If there is no security issue, please output empty JSON.
+If the input is invalid, return an empty JSON.
+
+----------------
+
+input:
+```
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+name: nginx-deployment
+spec:
+selector:
+    app: nginx
+  template:
+    metadata:
+      labels:
+        app: nginx
+    spec:
+      containers:
+      - name: nginx
+        image: nginx
+        securityContext:
+          privileged: true
+```
+output:
+[
+{{
+    "Rule": "Privileged Containers",
+    "Location": "spec.template.spec.containers[0].securityContext.privileged",
+    "Message": "Privileged Pods disable most security mechanisms and must be disallowed."
+}}
+]
+
+----------------
+
+input:
+```
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+name: nginx-deployment
+spec:
+  selector:
+    app: nginx
+  template:
+    metadata:
+      labels:
+        app: nginx
+    spec:
+      containers:
+      - name: nginx
+        image: nginx
+        securityContext:
+          privileged: false
+---
+apiVersion: v1
+kind: Pod
+metadata:
+  name: my-pod
+spec:
+  containers:
+  - name: my-container2
+    image: nginx
+    securityContext:
+      privileged: false
+```
+output:
+[]
+
+----------------
+
+input:
+```
+{spec}
+```
+output:'''
+
+
 def get_pss_openai_messages(spec: str) -> t.List[t.Dict[str, str]]:
     return [
         {
@@ -336,7 +422,7 @@ def get_pss_openai_messages(spec: str) -> t.List[t.Dict[str, str]]:
         },
         {
             'role': 'user',
-            'content': get_pss_prompt(spec),
+            'content': get_pss_prompt_without_table(spec),
         },
     ]
 
