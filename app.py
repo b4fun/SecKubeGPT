@@ -1,3 +1,8 @@
+# for: https://github.com/streamlit/streamlit/issues/744#issuecomment-686712930
+import asyncio
+loop = asyncio.new_event_loop()
+asyncio.set_event_loop(loop)
+
 import streamlit as st
 import typing as t
 from prompt import get_pss_results_from_openai, SpecResult
