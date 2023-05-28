@@ -1,15 +1,12 @@
-import json
-from utils import log_data, patch_script_thread_eventloop_if_needed
-import dataclasses as dc
 import guidance
+import json
 
-
-@dc.dataclass
-class SpecResult:
-    program_name: str
-    has_issues: bool
-    raw_response: str
-    formatted_response: str
+from ._types import (
+    SpecResult,
+    CheckPayload,
+    SecurityCheckProgram,
+    return_error_spec_on_failure,
+)
 
 
 pss_rules = (
@@ -179,9 +176,7 @@ spec:
 )
 
 
-def pss_program(llm) -> guidance.Program:
-    patch_script_thread_eventloop_if_needed()
-
+def pss_program(llm: guidance.llms.LLM) -> guidance.Program:
     return guidance(
         """{{#system~}}
 You are a helpful assistant that helps developers detect potential security issues in their Kubernetes YAML files using pod security standard.
@@ -227,28 +222,27 @@ output:
     )
 
 
-def get_pss_results_from_openai(api_key: str, model: str, spec: str) -> SpecResult:
-    program_name = "Pod Security Standard"
-    llm = guidance.llms.OpenAI(model=model, api_key=api_key)
-    program = pss_program(llm)
-    program_result = program(
-        pss_rules=pss_rules,
-        pss_examples=pss_examples,
-        query=spec,
-    )
+class PodSecurityStandard(SecurityCheckProgram):
+    @classmethod
+    def name(cls) -> str:
+        return "Pod Security Standard"
 
-    log_data("openai prompt", program_result)
-    response_content = program_result["check_results"]
+    def _llm(self, payload: CheckPayload) -> guidance.llms.LLM:
+        return guidance.llms.OpenAI(model=payload.model, api_key=payload.openapi_key)
 
-    try:
+    @return_error_spec_on_failure
+    def check(self, payload: CheckPayload) -> SpecResult:
+        program = pss_program(self._llm(payload))
+        program_result = program(
+            pss_rules=pss_rules,
+            pss_examples=pss_examples,
+            query=payload.spec,
+        )
+        response_content = program_result["check_results"]
+
         issue_dicts = json.loads(response_content)
         if len(issue_dicts) < 1:
-            return SpecResult(
-                program_name=program_name,
-                has_issues=False,
-                raw_response=response_content,
-                formatted_response="😊 no security issue detected!",
-            )
+            return self.succeed(response_content, "😊 no security issue detected!")
 
         result_table = "| Rule | Message | Location |\n|--|--|--|\n"
         for issue_dict in issue_dicts:
@@ -257,17 +251,4 @@ def get_pss_results_from_openai(api_key: str, model: str, spec: str) -> SpecResu
             location = json.dumps(issue_dict.get("Location"))
             result_table += f"| {rule_name} | {message} | {location} |\n"
 
-        return SpecResult(
-            program_name=program_name,
-            has_issues=True,
-            raw_response=response_content,
-            formatted_response=result_table,
-        )
-    except Exception as e:
-        log_data("openai response decode error", e)
-
-        # return the full response for now
-        err_details = (
-            f"failed to parse OpenAI response from JSON\n\n```\n{response_content}\n```"
-        )
-        raise Exception(err_details)
+        return self.failed(response_content, result_table)

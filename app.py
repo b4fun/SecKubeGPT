@@ -1,8 +1,7 @@
 import streamlit as st
 import typing as t
-from prompt import get_pss_results_from_openai, SpecResult
+from prompt import PodSecurityStandard, SpecResult, CheckPayload
 from utils import normalize_text, read_as_plain_text
-import traceback
 
 
 def initialize_state():
@@ -21,26 +20,16 @@ def ask_openai(spec: str):
         st.error("OPENAI_TOKEN secret is not set")
         return
 
-    try:
-        st.session_state.results = [
-            get_pss_results_from_openai(
-                st.secrets.OPENAI_TOKEN,
-                st.session_state.openai_model,
-                spec,
-            ),
-        ]
-    except Exception as e:
-        stack_trace = traceback.format_exc()
-        st.session_state.results = [
-            SpecResult(
-                program_name="Error",
-                has_issues=True,
-                raw_response="",
-                formatted_response=f"Error: {stack_trace}",
-            ),
-        ]
-        st.error("error running OpenAI API")
-        st.error(e)
+    payload = CheckPayload(
+        openapi_key=st.secrets.OPENAI_TOKEN,
+        model=st.session_state.openai_model,
+        spec=spec,
+    )
+
+    st.session_state.results = [
+        PodSecurityStandard().check(payload),
+    ]
+    print(st.session_state.results)
 
 
 def get_analyze_content() -> t.Optional[str]:
