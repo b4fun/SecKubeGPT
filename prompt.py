@@ -1,8 +1,8 @@
-import typing as t
 import json
 from utils import log_data
 import dataclasses as dc
 import guidance
+import asyncio
 
 
 @dc.dataclass
@@ -224,10 +224,23 @@ output:
         llm=llm,
     )
 
+def get_or_create_eventloop():
+	try:
+		return asyncio.get_event_loop()
+	except RuntimeError as ex:
+		if "There is no current event loop in thread" in str(ex):
+			loop = asyncio.new_event_loop()
+			asyncio.set_event_loop(loop)
+			return asyncio.get_event_loop()
+
 
 def get_pss_results_from_openai(api_key: str, model: str, spec: str) -> SpecResult:
     llm = guidance.llms.OpenAI(model=model, api_key=api_key)
     program = pss_program(llm)
+
+    loop = get_or_create_eventloop()
+    asyncio.set_event_loop(loop)
+
     program_result = program(
         pss_rules=pss_rules,
         pss_examples=pss_examples,
