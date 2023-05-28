@@ -2,6 +2,7 @@ import streamlit as st
 import typing as t
 from prompt import get_pss_results_from_openai, SpecResult
 from utils import normalize_text, read_as_plain_text
+import traceback
 
 
 def initialize_state():
@@ -27,10 +28,12 @@ def ask_openai(spec: str):
             spec,
         )
     except Exception as e:
+        stack_trace = traceback.format_exc()
         st.session_state.result = SpecResult(
-            has_issues=True, raw_response="", formatted_response=f"Error: {e}"
+            has_issues=True, raw_response="", formatted_response=f"Error: {stack_trace}"
         )
         st.error("error running OpenAI API")
+        st.error(e)
 
 
 def get_analyze_content() -> t.Optional[str]:
