@@ -1,5 +1,5 @@
 import json
-from utils import log_data
+from utils import log_data, patch_script_thread_eventloop_if_needed
 import dataclasses as dc
 import guidance
 
@@ -179,6 +179,8 @@ spec:
 
 
 def pss_program(llm) -> guidance.Program:
+    patch_script_thread_eventloop_if_needed()
+
     return guidance(
         """{{#system~}}
 You are a helpful assistant that helps developers detect potential security issues in their Kubernetes YAML files using pod security standard.

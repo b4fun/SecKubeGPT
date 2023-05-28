@@ -35,7 +35,6 @@ def read_as_plain_text(s: BytesIO) -> str:
     return text
 
 
-
 def patch_script_thread_eventloop_if_needed():
     """When deploying to Streamlit Sharing, the script thread does/may not have an event loop.
     This function patches the script thread to have an event loop.
