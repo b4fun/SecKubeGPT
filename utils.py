@@ -42,7 +42,7 @@ def patch_script_thread_eventloop_if_needed():
     See: https://github.com/microsoft/guidance/issues/104
     """
     try:
-        return asyncio.get_running_loop()
+        return asyncio.get_event_loop()
     except RuntimeError as ex:
         if "There is no current event loop in thread" in str(ex):
             loop = asyncio.new_event_loop()
