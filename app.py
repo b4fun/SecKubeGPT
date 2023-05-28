@@ -46,6 +46,7 @@ def ask_openai(spec: str):
             has_issues=True, raw_response="", formatted_response=f"Error: {e}"
         )
         st.error("error running OpenAI API")
+        st.error(e)
 
 
 def get_analyze_content() -> t.Optional[str]:
