@@ -28,12 +28,16 @@ def ask_openai(spec: str):
             spec,
         )
     except Exception as e:
+        import threading
+        current_thread = threading.current_thread()
+
         stack_trace = traceback.format_exc()
         st.session_state.result = SpecResult(
             has_issues=True, raw_response="", formatted_response=f"Error: {stack_trace}"
         )
         st.error("error running OpenAI API")
         st.error(e)
+        st.error(f'current thread: {current_thread.name} / {current_thread.ident}')
 
 
 def get_analyze_content() -> t.Optional[str]:

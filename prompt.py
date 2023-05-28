@@ -181,8 +181,8 @@ spec:
 
 def pss_program(llm) -> guidance.Program:
 	# FIXME: https://github.com/microsoft/guidance/issues/104
-    loop = get_or_create_eventloop()
-    asyncio.set_event_loop(loop)
+    # loop = get_or_create_eventloop()
+    # asyncio.set_event_loop(loop)
 
     return guidance(
         """{{#system~}}
