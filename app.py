@@ -1,6 +1,6 @@
 import streamlit as st
 import typing as t
-from prompt import get_pss_results_from_openai
+from prompt import get_pss_results_from_openai, SpecResult
 from utils import normalize_text, read_as_plain_text
 
 
@@ -9,7 +9,7 @@ def initialize_state():
         st.session_state.analyzing = False
 
     if "result" not in st.session_state:
-        st.session_state.result = ""
+        st.session_state.result = None
 
     if "openai_model" not in st.session_state:
         st.session_state.openai_model = "gpt-3.5-turbo"
@@ -27,7 +27,9 @@ def ask_openai(spec: str):
             spec,
         )
     except Exception as e:
-        st.session_state.result = f"{e}"
+        st.session_state.result = SpecResult(
+            has_issues=True, raw_response="", formatted_response=f"Error: {e}"
+        )
         st.error("error running OpenAI API")
 
 
@@ -109,15 +111,26 @@ def ui_analyze_settings():
 
 
 def ui_analyze_results():
-    st.write("### 3. Results")
+    if not st.session_state.result:
+        st.write("### 3. 🤔 Results")
+        st.button(
+            "Analyze",
+            disabled=not can_submit_analyze(),
+            on_click=do_analyze,
+        )
+        return
+
+    if st.session_state.result.has_issues:
+        st.write("### 3. ❗️ Results")
+    else:
+        st.write("### 3. ✅ Results")
+
     st.button(
         "Analyze",
         disabled=not can_submit_analyze(),
         on_click=do_analyze,
     )
-
-    if s := normalize_text(st.session_state.result):
-        st.markdown(s)
+    st.markdown(st.session_state.result.formatted_response)
 
 
 initialize_state()

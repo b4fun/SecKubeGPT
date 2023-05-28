@@ -1,8 +1,15 @@
 import typing as t
 import openai
 import json
-
 from utils import log_data
+import dataclasses as dc
+
+
+@dc.dataclass
+class SpecResult:
+    has_issues: bool
+    raw_response: str
+    formatted_response: str
 
 
 # TODO: convert table to example output
@@ -429,9 +436,8 @@ def get_pss_openai_messages(spec: str) -> t.List[t.Dict[str, str]]:
     ]
 
 
-def get_pss_results_from_openai(api_key: str, model: str, spec: str) -> str:
+def get_pss_results_from_openai(api_key: str, model: str, spec: str) -> SpecResult:
     messages = get_pss_openai_messages(spec)
-    print("here!!")
     log_data("openai prompt", messages[1]["content"])
 
     response = openai.ChatCompletion.create(
@@ -447,7 +453,11 @@ def get_pss_results_from_openai(api_key: str, model: str, spec: str) -> str:
     try:
         issue_dicts = json.loads(response_content)
         if len(issue_dicts) < 1:
-            return "😊 no security issue detected!"
+            return SpecResult(
+                has_issues=False,
+                raw_response=response_content,
+                formatted_response="😊 no security issue detected!",
+            )
 
         result_table = "| Rule | Message | Location |\n|--|--|--|\n"
         for issue_dict in issue_dicts:
@@ -455,8 +465,12 @@ def get_pss_results_from_openai(api_key: str, model: str, spec: str) -> str:
             message = issue_dict.get("Message")
             location = json.dumps(issue_dict.get("Location"))
             result_table += f"| {rule_name} | {message} | {location} |\n"
-        return result_table
 
+        return SpecResult(
+            has_issues=True,
+            raw_response=response_content,
+            formatted_response=result_table,
+        )
     except Exception as e:
         log_data("openai response decode error", e)
 
