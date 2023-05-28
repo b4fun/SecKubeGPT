@@ -180,6 +180,10 @@ spec:
 
 
 def pss_program(llm) -> guidance.Program:
+	# FIXME: https://github.com/microsoft/guidance/issues/104
+    loop = get_or_create_eventloop()
+    asyncio.set_event_loop(loop)
+
     return guidance(
         """{{#system~}}
 You are a helpful assistant that helps developers detect potential security issues in their Kubernetes YAML files using pod security standard.
@@ -235,9 +239,6 @@ def get_or_create_eventloop():
 
 
 def get_pss_results_from_openai(api_key: str, model: str, spec: str) -> SpecResult:
-    loop = get_or_create_eventloop()
-    asyncio.set_event_loop(loop)
-
     llm = guidance.llms.OpenAI(model=model, api_key=api_key)
     program = pss_program(llm)
     program_result = program(
