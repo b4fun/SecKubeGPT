@@ -9,15 +9,3 @@ spec:
   - name: sec-ctx-demo
     image: busybox
     command: ["sh", "-c", "sleep 1h"]
-
-# =============================== openai response  ===============================
-# [
-# {
-#     "Rule": "Host Namespaces",
-#     "Location": "spec.hostNetwork",
-#     "Value": false,
-#     "Message": "Sharing the host namespaces must be disallowed."
-# }
-# ]
-# ================================================================================
----
