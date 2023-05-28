@@ -235,12 +235,11 @@ def get_or_create_eventloop():
 
 
 def get_pss_results_from_openai(api_key: str, model: str, spec: str) -> SpecResult:
-    llm = guidance.llms.OpenAI(model=model, api_key=api_key)
-    program = pss_program(llm)
-
     loop = get_or_create_eventloop()
     asyncio.set_event_loop(loop)
 
+    llm = guidance.llms.OpenAI(model=model, api_key=api_key)
+    program = pss_program(llm)
     program_result = program(
         pss_rules=pss_rules,
         pss_examples=pss_examples,
