@@ -141,13 +141,32 @@ selector:
         image: nginx
         securityContext:
           privileged: true
+---
+apiVersion: v1
+kind: Pod
+metadata:
+  name: my-pod
+spec:
+  hostNetwork: true
+  containers:
+  - name: my-container2
+    image: nginx
+    securityContext:
+      privileged: false
 ```
 output:
 [
 {{
     "Rule": "Privileged Containers",
     "Location": "spec.template.spec.containers[0].securityContext.privileged",
+	"Value": true,
     "Message": "Privileged Pods disable most security mechanisms and must be disallowed."
+}},
+{{
+    "Rule": "Host Network",
+    "Location": "spec.hostNetwork",
+	"Value": true,
+    "Message": "Sharing the host namespaces must be disallowed."
 }}
 ]
 
@@ -178,6 +197,7 @@ kind: Pod
 metadata:
   name: my-pod
 spec:
+  hostNetwork: false
   containers:
   - name: my-container2
     image: nginx
