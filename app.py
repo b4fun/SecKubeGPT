@@ -1,11 +1,13 @@
 import streamlit as st
 import typing as t
 from prompt import get_pss_results_from_openai, SpecResult
-from utils import normalize_text, read_as_plain_text
+from utils import normalize_text, read_as_plain_text, patch_script_thread_eventloop_if_needed
 import traceback
 
 
 def initialize_state():
+    patch_script_thread_eventloop_if_needed()
+
     if "analyzing" not in st.session_state:
         st.session_state.analyzing = False
 

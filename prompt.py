@@ -2,7 +2,6 @@ import json
 from utils import log_data
 import dataclasses as dc
 import guidance
-import asyncio
 
 
 @dc.dataclass
@@ -180,10 +179,6 @@ spec:
 
 
 def pss_program(llm) -> guidance.Program:
-	# FIXME: https://github.com/microsoft/guidance/issues/104
-    # loop = get_or_create_eventloop()
-    # asyncio.set_event_loop(loop)
-
     return guidance(
         """{{#system~}}
 You are a helpful assistant that helps developers detect potential security issues in their Kubernetes YAML files using pod security standard.
@@ -227,15 +222,6 @@ output:
 """,
         llm=llm,
     )
-
-def get_or_create_eventloop():
-	try:
-		return asyncio.get_event_loop()
-	except RuntimeError as ex:
-		if "There is no current event loop in thread" in str(ex):
-			loop = asyncio.new_event_loop()
-			asyncio.set_event_loop(loop)
-			return asyncio.get_event_loop()
 
 
 def get_pss_results_from_openai(api_key: str, model: str, spec: str) -> SpecResult:
