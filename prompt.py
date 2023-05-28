@@ -6,6 +6,7 @@ import guidance
 
 @dc.dataclass
 class SpecResult:
+    program_name: str
     has_issues: bool
     raw_response: str
     formatted_response: str
@@ -227,6 +228,7 @@ output:
 
 
 def get_pss_results_from_openai(api_key: str, model: str, spec: str) -> SpecResult:
+    program_name = "Pod Security Standard"
     llm = guidance.llms.OpenAI(model=model, api_key=api_key)
     program = pss_program(llm)
     program_result = program(
@@ -242,6 +244,7 @@ def get_pss_results_from_openai(api_key: str, model: str, spec: str) -> SpecResu
         issue_dicts = json.loads(response_content)
         if len(issue_dicts) < 1:
             return SpecResult(
+                program_name=program_name,
                 has_issues=False,
                 raw_response=response_content,
                 formatted_response="😊 no security issue detected!",
@@ -255,6 +258,7 @@ def get_pss_results_from_openai(api_key: str, model: str, spec: str) -> SpecResu
             result_table += f"| {rule_name} | {message} | {location} |\n"
 
         return SpecResult(
+            program_name=program_name,
             has_issues=True,
             raw_response=response_content,
             formatted_response=result_table,

@@ -9,8 +9,8 @@ def initialize_state():
     if "analyzing" not in st.session_state:
         st.session_state.analyzing = False
 
-    if "result" not in st.session_state:
-        st.session_state.result = None
+    if "results" not in st.session_state:
+        st.session_state.results = []
 
     if "openai_model" not in st.session_state:
         st.session_state.openai_model = "gpt-3.5-turbo"
@@ -22,16 +22,23 @@ def ask_openai(spec: str):
         return
 
     try:
-        st.session_state.result = get_pss_results_from_openai(
-            st.secrets.OPENAI_TOKEN,
-            st.session_state.openai_model,
-            spec,
-        )
+        st.session_state.results = [
+            get_pss_results_from_openai(
+                st.secrets.OPENAI_TOKEN,
+                st.session_state.openai_model,
+                spec,
+            ),
+        ]
     except Exception as e:
         stack_trace = traceback.format_exc()
-        st.session_state.result = SpecResult(
-            has_issues=True, raw_response="", formatted_response=f"Error: {stack_trace}"
-        )
+        st.session_state.results = [
+            SpecResult(
+                program_name="Error",
+                has_issues=True,
+                raw_response="",
+                formatted_response=f"Error: {stack_trace}",
+            ),
+        ]
         st.error("error running OpenAI API")
         st.error(e)
 
@@ -113,27 +120,31 @@ def ui_analyze_settings():
         )
 
 
+def format_result_title(result: SpecResult) -> str:
+    if result.has_issues:
+        return f"🚨 {result.program_name}"
+
+    return f"✅ {result.program_name}"
+
+
 def ui_analyze_results():
-    if not st.session_state.result:
-        st.write("### 3. 🤔 Results")
-        st.button(
-            "Analyze",
-            disabled=not can_submit_analyze(),
-            on_click=do_analyze,
-        )
-        return
-
-    if st.session_state.result.has_issues:
-        st.write("### 3. ❗️ Results")
-    else:
-        st.write("### 3. ✅ Results")
-
+    st.write("### 3. 🤔 Results")
     st.button(
         "Analyze",
         disabled=not can_submit_analyze(),
         on_click=do_analyze,
     )
-    st.markdown(st.session_state.result.formatted_response)
+
+    if not st.session_state.results:
+        return
+
+    result_tab_titles = [
+        format_result_title(result) for result in st.session_state.results
+    ]
+    result_tabs = st.tabs(result_tab_titles)
+    for idx, result in enumerate(st.session_state.results):
+        with result_tabs[idx]:
+            st.markdown(result.formatted_response)
 
 
 initialize_state()
