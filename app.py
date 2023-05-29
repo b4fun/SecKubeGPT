@@ -80,9 +80,8 @@ def do_analyze():
 
 
 def ui_title():
-    st.title(
-        "🙈 SecKubeGPT", help="your GPT powered Kubernetes security helper has arrived"
-    )
+    st.title("🙈 SecKubeGPT")
+    st.caption("Your Kubernetes GPT Security Power Pack Has Arrived!")
 
 
 def ui_input_source():
