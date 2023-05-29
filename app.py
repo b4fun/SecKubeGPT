@@ -7,7 +7,7 @@ from prompt import (
     check,
     SecurityCheckProgram,
 )
-from utils import normalize_text, read_as_plain_text
+from utils import normalize_text, read_as_plain_text, patch_script_thread_eventloop_if_needed
 
 
 def initialize_state():
@@ -35,6 +35,7 @@ def ask_openai(spec: str):
     _selected_programs = selected_programs()
     print(f"Selected programs: {_selected_programs}")
 
+    patch_script_thread_eventloop_if_needed()
     st.session_state.results = check(_selected_programs, payload)
     print(st.session_state.results)
 
