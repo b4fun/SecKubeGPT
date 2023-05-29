@@ -1,10 +1,12 @@
 from ._types import SpecResult, SecurityCheckProgram, CheckPayload
 from ._pss import PodSecurityStandard
+from ._expert import SecurityExpert
 
 import typing as t
 
 supported_programs = [
     PodSecurityStandard(),
+    SecurityExpert(),
 ]
 
 def check(programs: t.List[SecurityCheckProgram], payload: CheckPayload) -> t.List[SpecResult]:

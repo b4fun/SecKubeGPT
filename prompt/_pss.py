@@ -227,12 +227,9 @@ class PodSecurityStandard(SecurityCheckProgram):
     name = "Pod Security Standard"
     help = "Check if the pod security standard is satisfied."
 
-    def _llm(self, payload: CheckPayload) -> guidance.llms.LLM:
-        return guidance.llms.OpenAI(model=payload.model, api_key=payload.openapi_key)
-
     @return_error_spec_on_failure
     def check(self, payload: CheckPayload) -> SpecResult:
-        program = pss_program(self._llm(payload))
+        program = pss_program(self.create_llm(payload))
         program_result = program(
             pss_rules=pss_rules,
             pss_examples=pss_examples,

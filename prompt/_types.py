@@ -2,6 +2,7 @@ import dataclasses as dc
 import typing as t
 import traceback
 import functools
+import guidance
 
 
 @dc.dataclass
@@ -55,6 +56,11 @@ class SecurityCheckProgram(t.Protocol):
             raw_response=raw_response,
             formatted_response=formatted_response,
         )
+
+    def create_llm(self, payload: CheckPayload) -> guidance.llms.LLM:
+        """Create the LLM instance for the program."""
+        # TODO: support more LLMs.
+        return guidance.llms.OpenAI(model=payload.model, api_key=payload.openapi_key)
 
     def __str__(self) -> str:
         return f"SecurityCheckProgram(name={self.name})"
