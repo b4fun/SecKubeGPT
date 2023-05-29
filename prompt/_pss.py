@@ -224,9 +224,8 @@ output:
 
 class PodSecurityStandard(SecurityCheckProgram):
 
-    @property
-    def name(self) -> str:
-        return "Pod Security Standard"
+    name = "Pod Security Standard"
+    help = "Check if the pod security standard is satisfied."
 
     def _llm(self, payload: CheckPayload) -> guidance.llms.LLM:
         return guidance.llms.OpenAI(model=payload.model, api_key=payload.openapi_key)

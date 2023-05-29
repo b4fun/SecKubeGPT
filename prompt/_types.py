@@ -31,6 +31,11 @@ class SecurityCheckProgram(t.Protocol):
         """The name of the program."""
         ...
 
+    @property
+    def help(self) -> str:
+        """Return the help message for the program."""
+        ...
+
     def check(self, payload: CheckPayload) -> SpecResult:
         """Run the security check program on the given spec."""
         ...

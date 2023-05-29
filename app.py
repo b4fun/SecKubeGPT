@@ -1,6 +1,12 @@
 import streamlit as st
 import typing as t
-from prompt import supported_programs, SpecResult, CheckPayload, check, SecurityCheckProgram
+from prompt import (
+    supported_programs,
+    SpecResult,
+    CheckPayload,
+    check,
+    SecurityCheckProgram,
+)
 from utils import normalize_text, read_as_plain_text
 
 
@@ -13,7 +19,6 @@ def initialize_state():
 
     if "openai_model" not in st.session_state:
         st.session_state.openai_model = "gpt-3.5-turbo"
-
 
 
 def ask_openai(spec: str):
@@ -102,13 +107,17 @@ def ui_input_source():
 def ui_analyze_settings():
     st.write("### 2. What settings to use?")
 
-    (tab_programs, tab_openai) = st.tabs(["Rules", "OpenAI"])
+    (tab_programs, tab_openai) = st.tabs(["Programs", "OpenAI"])
     with tab_programs:
+        st.caption(
+            "Program defines a collection of security checks to run on the provided spec. At least one program must be selected."
+        )
         for program in supported_programs:
             st.checkbox(
                 label=program.name,
                 key=program_as_key(program),
                 value=True,
+                help=program.help,
             )
 
     with tab_openai:
@@ -129,7 +138,7 @@ def format_result_title(result: SpecResult) -> str:
     return f"✅ {result.program_name}"
 
 
-program_key_prefix = '__program_'
+program_key_prefix = "__program_"
 
 
 def program_as_key(program: SecurityCheckProgram) -> str:
