@@ -1,16 +1,21 @@
 import streamlit as st
 import typing as t
-from prompt import get_pss_results_from_openai, SpecResult
+from prompt import (
+    supported_programs,
+    SpecResult,
+    CheckPayload,
+    check,
+    SecurityCheckProgram,
+)
 from utils import normalize_text, read_as_plain_text
-import traceback
 
 
 def initialize_state():
     if "analyzing" not in st.session_state:
         st.session_state.analyzing = False
 
-    if "result" not in st.session_state:
-        st.session_state.result = None
+    if "results" not in st.session_state:
+        st.session_state.results = []
 
     if "openai_model" not in st.session_state:
         st.session_state.openai_model = "gpt-3.5-turbo"
@@ -21,19 +26,17 @@ def ask_openai(spec: str):
         st.error("OPENAI_TOKEN secret is not set")
         return
 
-    try:
-        st.session_state.result = get_pss_results_from_openai(
-            st.secrets.OPENAI_TOKEN,
-            st.session_state.openai_model,
-            spec,
-        )
-    except Exception as e:
-        stack_trace = traceback.format_exc()
-        st.session_state.result = SpecResult(
-            has_issues=True, raw_response="", formatted_response=f"Error: {stack_trace}"
-        )
-        st.error("error running OpenAI API")
-        st.error(e)
+    payload = CheckPayload(
+        openapi_key=st.secrets.OPENAI_TOKEN,
+        model=st.session_state.openai_model,
+        spec=spec,
+    )
+
+    _selected_programs = selected_programs()
+    print(f"Selected programs: {_selected_programs}")
+
+    st.session_state.results = check(_selected_programs, payload)
+    print(st.session_state.results)
 
 
 def get_analyze_content() -> t.Optional[str]:
@@ -52,6 +55,9 @@ def get_analyze_content() -> t.Optional[str]:
 
 def can_submit_analyze() -> bool:
     if st.session_state.analyzing:
+        return False
+
+    if len(selected_programs()) < 1:
         return False
 
     return True
@@ -74,9 +80,8 @@ def do_analyze():
 
 
 def ui_title():
-    st.title(
-        "🙈 SecKubeGPT", help="your GPT powered Kubernetes security helper has arrived"
-    )
+    st.title("🙈 SecKubeGPT")
+    st.caption("Your Kubernetes GPT Security Power Pack Has Arrived!")
 
 
 def ui_input_source():
@@ -101,7 +106,19 @@ def ui_input_source():
 def ui_analyze_settings():
     st.write("### 2. What settings to use?")
 
-    (tab_openai,) = st.tabs(["OpenAI"])
+    (tab_programs, tab_openai) = st.tabs(["Programs", "OpenAI"])
+    with tab_programs:
+        st.caption(
+            "Program defines a collection of security checks to run on the provided spec. At least one program must be selected."
+        )
+        for program in supported_programs:
+            st.checkbox(
+                label=program.name,
+                key=program_as_key(program),
+                value=True,
+                help=program.help,
+            )
+
     with tab_openai:
         st.selectbox(
             "OpenAI Model",
@@ -113,27 +130,47 @@ def ui_analyze_settings():
         )
 
 
+def format_result_title(result: SpecResult) -> str:
+    if result.has_issues:
+        return f"🚨 {result.program_name}"
+
+    return f"✅ {result.program_name}"
+
+
+program_key_prefix = "__program_"
+
+
+def program_as_key(program: SecurityCheckProgram) -> str:
+    return f"{program_key_prefix}{program.id}"
+
+
+def selected_programs() -> t.List[SecurityCheckProgram]:
+    rv = []
+    for program in supported_programs:
+        key = program_as_key(program)
+        if key in st.session_state and st.session_state[key]:
+            rv.append(program)
+    return rv
+
+
 def ui_analyze_results():
-    if not st.session_state.result:
-        st.write("### 3. 🤔 Results")
-        st.button(
-            "Analyze",
-            disabled=not can_submit_analyze(),
-            on_click=do_analyze,
-        )
-        return
-
-    if st.session_state.result.has_issues:
-        st.write("### 3. ❗️ Results")
-    else:
-        st.write("### 3. ✅ Results")
-
+    st.write("### 3. Results")
     st.button(
         "Analyze",
         disabled=not can_submit_analyze(),
         on_click=do_analyze,
     )
-    st.markdown(st.session_state.result.formatted_response)
+
+    if not st.session_state.results:
+        return
+
+    result_tab_titles = [
+        format_result_title(result) for result in st.session_state.results
+    ]
+    result_tabs = st.tabs(result_tab_titles)
+    for idx, result in enumerate(st.session_state.results):
+        with result_tabs[idx]:
+            st.markdown(result.formatted_response)
 
 
 initialize_state()
