@@ -223,8 +223,9 @@ output:
 
 
 class PodSecurityStandard(SecurityCheckProgram):
-    @classmethod
-    def name(cls) -> str:
+
+    @property
+    def name(self) -> str:
         return "Pod Security Standard"
 
     def _llm(self, payload: CheckPayload) -> guidance.llms.LLM:

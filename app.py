@@ -1,6 +1,6 @@
 import streamlit as st
 import typing as t
-from prompt import PodSecurityStandard, SpecResult, CheckPayload
+from prompt import supported_programs, SpecResult, CheckPayload, check, SecurityCheckProgram
 from utils import normalize_text, read_as_plain_text
 
 
@@ -15,6 +15,7 @@ def initialize_state():
         st.session_state.openai_model = "gpt-3.5-turbo"
 
 
+
 def ask_openai(spec: str):
     if "OPENAI_TOKEN" not in st.secrets:
         st.error("OPENAI_TOKEN secret is not set")
@@ -26,9 +27,10 @@ def ask_openai(spec: str):
         spec=spec,
     )
 
-    st.session_state.results = [
-        PodSecurityStandard().check(payload),
-    ]
+    _selected_programs = selected_programs()
+    print(f"Selected programs: {_selected_programs}")
+
+    st.session_state.results = check(_selected_programs, payload)
     print(st.session_state.results)
 
 
@@ -48,6 +50,9 @@ def get_analyze_content() -> t.Optional[str]:
 
 def can_submit_analyze() -> bool:
     if st.session_state.analyzing:
+        return False
+
+    if len(selected_programs()) < 1:
         return False
 
     return True
@@ -97,7 +102,15 @@ def ui_input_source():
 def ui_analyze_settings():
     st.write("### 2. What settings to use?")
 
-    (tab_openai,) = st.tabs(["OpenAI"])
+    (tab_programs, tab_openai) = st.tabs(["Rules", "OpenAI"])
+    with tab_programs:
+        for program in supported_programs:
+            st.checkbox(
+                label=program.name,
+                key=program_as_key(program),
+                value=True,
+            )
+
     with tab_openai:
         st.selectbox(
             "OpenAI Model",
@@ -116,8 +129,24 @@ def format_result_title(result: SpecResult) -> str:
     return f"✅ {result.program_name}"
 
 
+program_key_prefix = '__program_'
+
+
+def program_as_key(program: SecurityCheckProgram) -> str:
+    return f"{program_key_prefix}{program.name}"
+
+
+def selected_programs() -> t.List[SecurityCheckProgram]:
+    rv = []
+    for program in supported_programs:
+        key = program_as_key(program)
+        if key in st.session_state and st.session_state[key]:
+            rv.append(program)
+    return rv
+
+
 def ui_analyze_results():
-    st.write("### 3. 🤔 Results")
+    st.write("### 3. Results")
     st.button(
         "Analyze",
         disabled=not can_submit_analyze(),

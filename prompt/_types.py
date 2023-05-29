@@ -26,8 +26,8 @@ class CheckPayload:
 class SecurityCheckProgram(t.Protocol):
     """SecurityCheckProgram validates a Kubernetes spec for security issues."""
 
-    @classmethod
-    def name(cls) -> str:
+    @property
+    def name(self) -> str:
         """The name of the program."""
         ...
 
@@ -37,7 +37,7 @@ class SecurityCheckProgram(t.Protocol):
 
     def succeed(self, raw_response: str, formatted_response: str) -> SpecResult:
         return SpecResult(
-            program_name=self.name(),
+            program_name=self.name,
             has_issues=False,
             raw_response=raw_response,
             formatted_response=formatted_response,
@@ -45,11 +45,14 @@ class SecurityCheckProgram(t.Protocol):
 
     def failed(self, raw_response: str, formatted_response: str) -> SpecResult:
         return SpecResult(
-            program_name=self.name(),
+            program_name=self.name,
             has_issues=True,
             raw_response=raw_response,
             formatted_response=formatted_response,
         )
+
+    def __str__(self) -> str:
+        return f"SecurityCheckProgram(name={self.name})"
 
 
 def return_error_spec_on_failure(f):
@@ -61,7 +64,7 @@ def return_error_spec_on_failure(f):
             full_stack_trace = traceback.format_exc()
 
             return SpecResult(
-                program_name=args[0].name(),
+                program_name=args[0].name,
                 has_issues=True,
                 raw_response=full_stack_trace,
                 formatted_response=f"😱 {e}",
