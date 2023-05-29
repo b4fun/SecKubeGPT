@@ -107,6 +107,8 @@ output:
 
 
 class SecurityExpert(SecurityCheckProgram):
+
+    id = "security_expert"
     name = "Security Expert"
     help = "Check spec with security expert's knowledge. (GPT-4 is recommended)"
 

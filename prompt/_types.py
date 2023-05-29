@@ -28,6 +28,11 @@ class SecurityCheckProgram(t.Protocol):
     """SecurityCheckProgram validates a Kubernetes spec for security issues."""
 
     @property
+    def id(self) -> str:
+        """The ID of the program. Should be globally unique."""
+        ...
+
+    @property
     def name(self) -> str:
         """The name of the program."""
         ...

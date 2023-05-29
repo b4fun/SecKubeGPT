@@ -141,7 +141,7 @@ program_key_prefix = "__program_"
 
 
 def program_as_key(program: SecurityCheckProgram) -> str:
-    return f"{program_key_prefix}{program.name}"
+    return f"{program_key_prefix}{program.id}"
 
 
 def selected_programs() -> t.List[SecurityCheckProgram]:
