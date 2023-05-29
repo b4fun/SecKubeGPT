@@ -59,6 +59,9 @@ class SecurityCheckProgram(t.Protocol):
     def __str__(self) -> str:
         return f"SecurityCheckProgram(name={self.name})"
 
+    def __repr__(self) -> str:
+        return f"SecurityCheckProgram(name={self.name})"
+
 
 def return_error_spec_on_failure(f):
     @functools.wraps(f)
