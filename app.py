@@ -7,7 +7,11 @@ from prompt import (
     check,
     SecurityCheckProgram,
 )
-from utils import normalize_text, read_as_plain_text, patch_script_thread_eventloop_if_needed
+from utils import (
+    normalize_text,
+    read_as_plain_text,
+    patch_script_thread_eventloop_if_needed,
+)
 
 
 def initialize_state():
@@ -21,13 +25,32 @@ def initialize_state():
         st.session_state.openai_model = "gpt-3.5-turbo"
 
 
-def ask_openai(spec: str):
-    if "OPENAI_TOKEN" not in st.secrets:
-        st.error("OPENAI_TOKEN secret is not set")
-        return
+def has_openai_token_secret() -> bool:
+    if "OPENAI_TOKEN" in st.secrets and st.secrets.OPENAI_TOKEN:
+        return True
+    return False
 
+
+def openai_token() -> t.Optional[str]:
+    if "openai_token" in st.session_state and st.session_state.openai_token:
+        return st.session_state.openai_token
+
+    if "OPENAI_TOKEN" in st.secrets and st.secrets.OPENAI_TOKEN:
+        return st.secrets.OPENAI_TOKEN
+
+    return None
+
+
+def must_resolve_openai_token() -> str:
+    t = openai_token()
+    if not t:
+        st.error("No OpenAPI token set, please provide via the OpenAI Token input")
+    return t
+
+
+def ask_openai(spec: str):
     payload = CheckPayload(
-        openapi_key=st.secrets.OPENAI_TOKEN,
+        openapi_key=must_resolve_openai_token(),
         model=st.session_state.openai_model,
         spec=spec,
     )
@@ -85,6 +108,22 @@ def ui_title():
     st.caption("Your Kubernetes GPT Security Power Pack Has Arrived!")
 
 
+def ui_openai_token():
+    st.write("### Before we start...")
+    st.write(
+        "Please provide your OpenAI token. "
+        "If you do not have one, you can get one [here](https://platform.openai.com/account/api-keys)."
+    )
+    st.write(
+        "We guarantee that your token will not be stored anywhere."
+    )
+    st.text_input(
+        "OpenAI Token (sk-xxx)",
+        key="openai_token",
+        type="password",
+    )
+
+
 def ui_input_source():
     st.write("### 1. Provide some Kubernetes specs")
     tab_text_area, tab_file_upload = st.tabs(["From String", "From Files"])
@@ -110,7 +149,8 @@ def ui_analyze_settings():
     (tab_programs, tab_openai) = st.tabs(["Programs", "OpenAI"])
     with tab_programs:
         st.caption(
-            "Program defines a collection of security checks to run on the provided spec. At least one program must be selected."
+            "Each program defines a collection of security checks to run on the provided spec. "
+            "At least one program must be selected."
         )
         for program in supported_programs:
             st.checkbox(
@@ -176,6 +216,10 @@ def ui_analyze_results():
 
 initialize_state()
 ui_title()
+
+if not has_openai_token_secret():
+    ui_openai_token()
+
 ui_input_source()
 ui_analyze_settings()
 ui_analyze_results()
