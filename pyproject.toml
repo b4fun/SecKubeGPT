@@ -7,7 +7,7 @@ license = "MIT"
 readme = "README.md"
 
 [tool.poetry.dependencies]
-python = "^3.9" # NOTE: streamlit.app uses 3.9.16
+python = "^3.9, !=3.9.7" # NOTE: streamlit.app uses 3.9.16
 streamlit = "^1.22.0"
 openai = "^0.27.6"
 guidance = "^0.0.57"

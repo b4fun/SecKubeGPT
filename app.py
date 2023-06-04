@@ -25,24 +25,24 @@ def initialize_state():
         st.session_state.openai_model = "gpt-3.5-turbo"
 
 
-def has_openai_token_secret() -> bool:
-    if "OPENAI_TOKEN" in st.secrets and st.secrets.OPENAI_TOKEN:
+def has_openai_api_key_secret() -> bool:
+    if "OPENAI_API_KEY" in st.secrets and st.secrets.OPENAI_API_KEY:
         return True
     return False
 
 
-def openai_token() -> t.Optional[str]:
-    if "openai_token" in st.session_state and st.session_state.openai_token:
-        return st.session_state.openai_token
+def openai_api_key() -> t.Optional[str]:
+    if "openai_api_key" in st.session_state and st.session_state.openai_api_key:
+        return st.session_state.openai_api_key
 
-    if "OPENAI_TOKEN" in st.secrets and st.secrets.OPENAI_TOKEN:
-        return st.secrets.OPENAI_TOKEN
+    if "OPENAI_API_KEY" in st.secrets and st.secrets.OPENAI_API_KEY:
+        return st.secrets.OPENAI_API_KEY
 
     return None
 
 
-def must_resolve_openai_token() -> str:
-    t = openai_token()
+def must_resolve_openai_api_key() -> str:
+    t = openai_api_key()
     if not t:
         st.error("No OpenAPI token set, please provide via the OpenAI Token input")
     return t
@@ -50,7 +50,7 @@ def must_resolve_openai_token() -> str:
 
 def ask_openai(spec: str):
     payload = CheckPayload(
-        openapi_key=must_resolve_openai_token(),
+        openapi_key=must_resolve_openai_api_key(),
         model=st.session_state.openai_model,
         spec=spec,
     )
@@ -108,7 +108,7 @@ def ui_title():
     st.caption("Your Kubernetes GPT Security Power Pack Has Arrived!")
 
 
-def ui_openai_token():
+def ui_openai_api_key():
     st.write("### Before we start...")
     st.write(
         "Please provide your OpenAI token. "
@@ -119,7 +119,7 @@ def ui_openai_token():
     )
     st.text_input(
         "OpenAI Token (sk-xxx)",
-        key="openai_token",
+        key="openai_api_key",
         type="password",
     )
 
@@ -217,8 +217,8 @@ def ui_analyze_results():
 initialize_state()
 ui_title()
 
-if not has_openai_token_secret():
-    ui_openai_token()
+if not has_openai_api_key_secret():
+    ui_openai_api_key()
 
 ui_input_source()
 ui_analyze_settings()
