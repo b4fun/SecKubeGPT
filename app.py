@@ -22,7 +22,7 @@ def initialize_state():
         st.session_state.results = []
 
     if "openai_model" not in st.session_state:
-        st.session_state.openai_model = "gpt-3.5-turbo"
+        st.session_state.openai_model = "gpt-4"
 
 
 def has_openai_api_key_secret() -> bool:
