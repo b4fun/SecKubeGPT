@@ -107,7 +107,6 @@ output:
 
 
 class SecurityExpert(SecurityCheckProgram):
-
     id = "security_expert"
     name = "Security Expert"
     help = "Check spec with security expert's knowledge. (GPT-4 is recommended)"
@@ -131,6 +130,8 @@ class SecurityExpert(SecurityCheckProgram):
 
         result_table = "| Message | Suggestion |\n| --- | --- |\n"
         for issue_dict in issue_dicts:
-            result_table += f"| {issue_dict['Message']} | {issue_dict['Suggestion']} |\n"
+            result_table += (
+                f"| {issue_dict['Message']} | {issue_dict['Suggestion']} |\n"
+            )
 
         return self.failed(response_content, result_table)

@@ -114,9 +114,7 @@ def ui_openai_token():
         "Please provide your OpenAI token. "
         "If you do not have one, you can get one [here](https://platform.openai.com/account/api-keys)."
     )
-    st.write(
-        "We guarantee that your token will not be stored anywhere."
-    )
+    st.write("We guarantee that your token will not be stored anywhere.")
     st.text_input(
         "OpenAI Token (sk-xxx)",
         key="openai_token",
