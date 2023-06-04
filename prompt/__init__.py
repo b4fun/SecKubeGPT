@@ -9,7 +9,10 @@ supported_programs = [
     SecurityExpert(),
 ]
 
-def check(programs: t.List[SecurityCheckProgram], payload: CheckPayload) -> t.List[SpecResult]:
+
+def check(
+    programs: t.List[SecurityCheckProgram], payload: CheckPayload
+) -> t.List[SpecResult]:
     """Run the security check programs on the given spec.
 
     Args:
@@ -26,4 +29,10 @@ def check(programs: t.List[SecurityCheckProgram], payload: CheckPayload) -> t.Li
     return rv
 
 
-__all__ = ["SpecResult", "SecurityCheckProgram", "CheckPayload", "supported_programs", "check"]
+__all__ = [
+    "SpecResult",
+    "SecurityCheckProgram",
+    "CheckPayload",
+    "supported_programs",
+    "check",
+]

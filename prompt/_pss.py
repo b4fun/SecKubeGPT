@@ -223,7 +223,6 @@ output:
 
 
 class PodSecurityStandard(SecurityCheckProgram):
-
     id = "pss_baseline"
     name = "Pod Security Standard"
     help = "Check if the pod security standard is satisfied."
