@@ -135,16 +135,34 @@ def ui_openai_api_key():
     )
 
 
+_sample_spec = """
+apiVersion: v1
+kind: Pod
+metadata:
+  name: sec-kube-gpt-demo
+spec:
+  hostNetwork: true
+  containers:
+  - name: busybox
+    image: busybox
+    command: ["sh", "-c", "sleep 1h"]
+""".strip()
+
+
 def ui_input_source():
     st.write("### 1. Provide some Kubernetes specs")
     tab_text_area, tab_file_upload = st.tabs(["From String", "From Files"])
     with tab_text_area:
+        if st.button("Load Sample"):
+            st.session_state.spec = _sample_spec
+            st.experimental_rerun()
         st.text_area(
             "Spec",
             key="spec",
             height=400,
             help="If files upload is used, this will be ignored",
         )
+
     with tab_file_upload:
         st.file_uploader(
             "Upload your Kubernetes spec files",
