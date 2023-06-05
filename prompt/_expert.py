@@ -119,7 +119,6 @@ class SecurityExpert(SecurityCheckProgram):
             query=payload.spec,
         )
 
-        print(program_result)
         response_content = program_result["check_results"]
         issue_dicts = json.loads(response_content)
         if len(issue_dicts) < 1:
