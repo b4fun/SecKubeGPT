@@ -3,7 +3,7 @@ meta:
   name: Pod Security Standards
   help: Check if the pod security standard is satisfied.
 prompt:
-
+  input_variable_name: query
   template: |
     {{#system~}}
     You are a helpful assistant that helps developers detect potential security

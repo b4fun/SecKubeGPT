@@ -21,8 +21,8 @@ class SecurityCheckProgramMetadata:
 @dc.dataclass
 class SecurityCheckProgramPrompt:
     template: str
+    input_variable_name: str
     static_variables: t.Mapping[str, t.Any] = dc.field(default_factory=dict)
-    input_variable_name: str = dc.field(default="query")
 
 
 @dc.dataclass
@@ -82,7 +82,14 @@ class SpecProgram(SecurityCheckProgram):
             llm=llm,
         )
 
-    def parse_program_result(self, program_result: guidance.Program) -> SpecResult:
+    def create_succeed_result(
+        self, payload: CheckPayload, response_content: str
+    ) -> SpecResult:
+        return self.succeed(response_content, self._spec.result.succeed_message)
+
+    def parse_program_result(
+        self, payload: CheckPayload, program_result: guidance.Program
+    ) -> SpecResult:
         assert (
             self._spec.result.response_variable_name in program_result
         ), f"Expected response variable name {self._spec.result.response_variable_name} in program result, but got {program_result}"
@@ -94,7 +101,7 @@ class SpecProgram(SecurityCheckProgram):
 
         data_dict = json.loads(response_content)
         if len(data_dict) < 1:
-            return self.succeed(response_content, self._spec.result.succeed_message)
+            return self.create_succeed_result(payload, response_content)
 
         table_rows = [
             # header
@@ -119,4 +126,4 @@ class SpecProgram(SecurityCheckProgram):
         variables[self._spec.prompt.input_variable_name] = payload.spec
         program_result = program(**variables)
 
-        return self.parse_program_result(program_result)
+        return self.parse_program_result(payload, program_result)
