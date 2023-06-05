@@ -3,7 +3,12 @@ import typing as t
 import guidance
 import json
 
-from ._types import SecurityCheckProgram, CheckPayload, SpecResult
+from ._types import (
+    SecurityCheckProgram,
+    CheckPayload,
+    SpecResult,
+    return_error_spec_on_failure,
+)
 
 
 @dc.dataclass
@@ -106,6 +111,7 @@ class SpecProgram(SecurityCheckProgram):
 
         return self.failed(response_content, "\n".join(table_rows))
 
+    @return_error_spec_on_failure
     def check(self, payload: CheckPayload) -> SpecResult:
         program = self.create_program(self.create_llm(payload))
 
