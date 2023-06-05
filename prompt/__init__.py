@@ -1,12 +1,11 @@
 from ._types import SpecResult, SecurityCheckProgram, CheckPayload
-from ._pss import PodSecurityStandard
-from ._expert import SecurityExpert
+from . import _pss, _expert
 
 import typing as t
 
 supported_programs = [
-    PodSecurityStandard(),
-    SecurityExpert(),
+    _pss.create_program(),
+    _expert.create_program(),
 ]
 
 
