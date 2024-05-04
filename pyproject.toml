@@ -8,7 +8,7 @@ readme = "README.md"
 
 [tool.poetry.dependencies]
 python = "^3.9, !=3.9.7" # NOTE: streamlit.app uses 3.9.16
-streamlit = "^1.22.0"
+streamlit = "^1.30.0"
 openai = "^0.27.6"
 guidance = "^0.0.57"
 pyyaml = "^6.0"
